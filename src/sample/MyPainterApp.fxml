@@ -82,7 +82,7 @@
                         </AnchorPane>
                     </content>
                 </TitledPane>
-                <Button fx:id="undoButton" disable="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#undoButtonPressed" text="Undo" />
+                <Button fx:id="undoButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#undoButtonPressed" text="Undo" />
                 <Button fx:id="clearButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#clearButtonPressed" text="Clear" />
             </children>
         </VBox>
@@ -143,6 +143,7 @@
                   <Insets right="4.0" />
                </padding>
             </RadioButton>
+            <RadioButton fx:id="selectRadioButton" mnemonicParsing="false" onAction="#shapeRadioButtonSelected" text="Select" toggleGroup="$shapeToggleGroup" />
          </items>
          <BorderPane.margin>
             <Insets bottom="8.0" />
