@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.canvas.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="520.0" prefWidth="840.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.MyPainterAppController">
+    <left>
+        <VBox spacing="8.0" BorderPane.alignment="CENTER">
+            <children>
+                <TitledPane text="Color Chooser">
+                    <content>
+                        <GridPane hgap="8.0" vgap="4.0">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="46.0" minWidth="10.0" prefWidth="33.0" />
+                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="141.0" minWidth="10.0" prefWidth="139.0" />
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="50.0" />
+                            </columnConstraints>
+                            <rowConstraints>
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" />
+                                <RowConstraints />
+                                <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                            </rowConstraints>
+                            <children>
+                        <Rectangle fx:id="brushColorWatch" arcHeight="5.0" arcWidth="5.0" fill="#5b7894" height="20.0" stroke="BLACK" strokeType="INSIDE" width="40.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="6" GridPane.valignment="CENTER" GridPane.vgrow="ALWAYS" />
+                                <Label text="Red" GridPane.rowIndex="2" />
+                                <Label text="Green" GridPane.rowIndex="3" />
+                                <Label text="Bule" GridPane.rowIndex="4" />
+                                <Label text="Alpha" GridPane.rowIndex="5" />
+                                <TextField fx:id="redTextField" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                                <TextField fx:id="greenTextField" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                                <TextField fx:id="blueTextField" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+                                <TextField fx:id="alphaTextField" GridPane.columnIndex="2" GridPane.rowIndex="5" />
+                                <Slider fx:id="redSlider" blockIncrement="5.0" max="255.0" value="125.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                <Slider fx:id="greenSlider" blockIncrement="5.0" max="255.0" value="125.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                <Slider fx:id="blueSlider" blockIncrement="5.0" max="255.0" value="125.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                <Slider fx:id="alphaSlider" blockIncrement="0.1" max="1.0" value="1.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                        <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="8.0" GridPane.columnIndex="1">
+                           <children>
+                              <RadioButton fx:id="strokeRadioButton" mnemonicParsing="false" text="Stroke">
+                                 <toggleGroup>
+                                    <ToggleGroup fx:id="strokeFillTG" />
+                                 </toggleGroup>
+                              </RadioButton>
+                              <RadioButton fx:id="fillRadioButton" mnemonicParsing="false" text="Fill" toggleGroup="$strokeFillTG" />
+                           </children>
+                        </HBox>
+                            </children>
+                            <padding>
+                                <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+                            </padding>
+                        </GridPane>
+                    </content>
+                </TitledPane>
+                <TitledPane animated="false" text="Pen Size">
+                    <content>
+                        <AnchorPane minHeight="0.0" minWidth="0.0">
+                            <children>
+                        <HBox spacing="8.0">
+                           <children>
+                                        <RadioButton fx:id="smallRadioButton" mnemonicParsing="false" onAction="#sizeRadioButtonSelected" text="Small">
+                                            <toggleGroup>
+                                                <ToggleGroup fx:id="sizeToggleGroup" />
+                                            </toggleGroup>
+                                        </RadioButton>
+                                        <RadioButton fx:id="mediumRadioButton" mnemonicParsing="false" onAction="#sizeRadioButtonSelected" text="Medium" toggleGroup="$sizeToggleGroup" />
+                                        <RadioButton fx:id="largeRadioButton" mnemonicParsing="false" onAction="#sizeRadioButtonSelected" text="Large" toggleGroup="$sizeToggleGroup" />
+                           </children>
+                           <padding>
+                              <Insets left="14.0" right="14.0" top="14.0" />
+                           </padding>
+                        </HBox>
+                            </children>
+                        </AnchorPane>
+                    </content>
+                </TitledPane>
+                <Button fx:id="undoButton" disable="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#undoButtonPressed" text="Undo" />
+                <Button fx:id="clearButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#clearButtonPressed" text="Clear" />
+            </children>
+        </VBox>
+    </left>
+    <padding>
+        <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+    </padding>
+   <center>
+      <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" style="-fx-background-color: white;" BorderPane.alignment="CENTER">
+         <children>
+            <Canvas fx:id="canvas" height="464.0" width="560.0">
+               <cursor>
+                  <Cursor fx:constant="CROSSHAIR" />
+               </cursor></Canvas>
+            <Canvas fx:id="canvasGo" height="464.0" onMouseDragged="#canvasOnMouseDragged" onMousePressed="#canvasOnMousePressed" onMouseReleased="#canvasOnMouseReleased" width="560.0" />
+         </children>
+         <BorderPane.margin>
+            <Insets left="8.0" />
+         </BorderPane.margin>
+      </AnchorPane>
+   </center>
+   <top>
+      <ToolBar BorderPane.alignment="CENTER">
+         <items>
+            <Label text="Tools">
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font>
+               <padding>
+                  <Insets right="8.0" />
+               </padding>
+            </Label>
+            <RadioButton fx:id="shapeRadioPen" mnemonicParsing="false" onAction="#shapeRadioButtonSelected" text="Pen">
+               <toggleGroup>
+                  <ToggleGroup fx:id="shapeToggleGroup" />
+               </toggleGroup>
+               <padding>
+                  <Insets right="4.0" />
+               </padding>
+            </RadioButton>
+            <RadioButton fx:id="shapeRadioLine" mnemonicParsing="false" onAction="#shapeRadioButtonSelected" text="Line" toggleGroup="$shapeToggleGroup">
+               <padding>
+                  <Insets right="4.0" />
+               </padding>
+            </RadioButton>
+            <RadioButton fx:id="shapeRadioRectangle" mnemonicParsing="false" onAction="#shapeRadioButtonSelected" text="Rectangle" toggleGroup="$shapeToggleGroup">
+               <padding>
+                  <Insets right="4.0" />
+               </padding>
+            </RadioButton>
+            <RadioButton fx:id="shapeRadioOval" mnemonicParsing="false" onAction="#shapeRadioButtonSelected" text="Oval" toggleGroup="$shapeToggleGroup">
+               <padding>
+                  <Insets right="4.0" />
+               </padding>
+            </RadioButton>
+            <RadioButton fx:id="eraserRadioButton" mnemonicParsing="false" onAction="#shapeRadioButtonSelected" text="Eraser" toggleGroup="$shapeToggleGroup">
+               <padding>
+                  <Insets right="4.0" />
+               </padding>
+            </RadioButton>
+         </items>
+         <BorderPane.margin>
+            <Insets bottom="8.0" />
+         </BorderPane.margin>
+      </ToolBar>
+   </top>
+</BorderPane>
