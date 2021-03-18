@@ -7,4 +7,6 @@ public interface SelectableNode {
     public boolean requestSelection(boolean select);
 
     public void notifySelection(boolean select);
+
+    public void notifyDragged(double x, double y, double dx, double dy);
 }

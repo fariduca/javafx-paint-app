@@ -16,6 +16,10 @@ public class SelectionHandler {
     private Clipboard clipboard;
 
     private EventHandler<MouseEvent> mousePressedEventHandler;
+    private EventHandler<MouseEvent> mouseDraggedEventHandler;
+
+    private double oldX;
+    private double oldY;
 
     public SelectionHandler(final Parent root) {
         this.clipboard = new Clipboard();
@@ -26,15 +30,26 @@ public class SelectionHandler {
                 event.consume();
             }
         };
+        this.mouseDraggedEventHandler = new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                SelectionHandler.this.doOnMouseDragged(root, event);
+                event.consume();
+            }
+        };
     }
 
     public EventHandler<MouseEvent> getMousePressedEventHandler() {
         return mousePressedEventHandler;
     }
 
+    public EventHandler<MouseEvent> getMouseDraggedEventHandler() {
+        return mouseDraggedEventHandler;
+    }
+
     private void doOnMousePressed(Parent root, MouseEvent event) {
         Node target = (Node) event.getTarget();
-        var chi = root.getChildrenUnmodifiable();
+
         if(target.equals(root))
             clipboard.unselectAll();
         if(root.getChildrenUnmodifiable().contains(target) && target instanceof SelectableNode) {
@@ -42,6 +57,17 @@ public class SelectionHandler {
             if(!clipboard.getSelectedItems().contains(selectableTarget))
                 clipboard.unselectAll();
             clipboard.select(selectableTarget, true);
+            oldX = event.getX();
+            oldY = event.getY();
+        }
+    }
+
+    private void doOnMouseDragged(Parent root, MouseEvent event) {
+        Node target = (Node) event.getTarget();
+
+        if(root.getChildrenUnmodifiable().contains(target) && target instanceof SelectableNode) {
+            SelectableNode selectableTarget = (SelectableNode) target;
+            selectableTarget.notifyDragged(oldX, oldY, event.getX(), event.getY());
         }
     }
 
