@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.canvas.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
@@ -82,7 +81,7 @@
                         </AnchorPane>
                     </content>
                 </TitledPane>
-                <Button fx:id="undoButton" disable="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#undoButtonPressed" text="Undo" />
+                <Button fx:id="undoButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#undoButtonPressed" text="Undo" />
                 <Button fx:id="clearButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#clearButtonPressed" text="Clear" />
             </children>
         </VBox>
@@ -91,12 +90,8 @@
         <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
     </padding>
    <center>
-      <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" style="-fx-background-color: white;" BorderPane.alignment="CENTER">
+      <AnchorPane fx:id="anchorPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" style="-fx-background-color: white;" BorderPane.alignment="CENTER">
          <children>
-            <Canvas fx:id="canvas" height="464.0" width="560.0">
-               <cursor>
-                  <Cursor fx:constant="CROSSHAIR" />
-               </cursor></Canvas>
             <Canvas fx:id="canvasGo" height="464.0" onMouseDragged="#canvasOnMouseDragged" onMousePressed="#canvasOnMousePressed" onMouseReleased="#canvasOnMouseReleased" width="560.0" />
          </children>
          <BorderPane.margin>
@@ -143,6 +138,7 @@
                   <Insets right="4.0" />
                </padding>
             </RadioButton>
+            <RadioButton fx:id="selectRadioButton" mnemonicParsing="false" onAction="#shapeRadioButtonSelected" text="Select" toggleGroup="$shapeToggleGroup" />
          </items>
          <BorderPane.margin>
             <Insets bottom="8.0" />

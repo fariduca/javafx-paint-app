@@ -3,14 +3,19 @@ package sample;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Parent;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.*;
+
+import java.util.Stack;
 
 public class MyPainterAppController {
     private enum PenSize {
@@ -23,15 +28,18 @@ public class MyPainterAppController {
         public int getRadius() { return radius; }
     }
 
-    private enum Shape {
+    private enum ToolsEnum {
         PEN(),
         LINE(),
         RECTANGLE(),
         OVAL(),
-        ERASER()
+        ERASER(),
+        SELECT()
     }
 
     double startX, startY, lastX,lastY,oldX,oldY;
+
+    Stack<Shape> undoHistory = new Stack<>();
 
     @FXML
     private TextField redTextField;
@@ -88,6 +96,9 @@ public class MyPainterAppController {
     private RadioButton eraserRadioButton;
 
     @FXML
+    private RadioButton selectRadioButton;
+
+    @FXML
     private RadioButton strokeRadioButton;
 
     @FXML
@@ -103,28 +114,34 @@ public class MyPainterAppController {
     private Button clearButton;
 
     @FXML
-    private Canvas canvas, canvasGo;
+    private Canvas canvasGo;
 
-    private Shape shape = Shape.PEN;
+    @FXML
+    private AnchorPane anchorPane;
+
+    private ToolsEnum selectedTool = ToolsEnum.PEN;
     private PenSize radius = PenSize.MEDIUM;
     private Paint brushColor;
     private int red, green, blue;
     private double alpha;
-    private GraphicsContext graphicsContextEff, graphicsContext;
+    private GraphicsContext graphicsContextEff;
+    private SelectionHandler selectionHandler;
+    private Path path = null;
 
     public void initialize() {
+        selectionHandler = new SelectionHandler(anchorPane);
         graphicsContextEff = canvasGo.getGraphicsContext2D();
-        graphicsContext = canvas.getGraphicsContext2D();
 
         smallRadioButton.setUserData(PenSize.SMALL);
         mediumRadioButton.setUserData(PenSize.MEDIUM);
         largeRadioButton.setUserData(PenSize.LARGE);
 
-        shapeRadioPen.setUserData(Shape.PEN);
-        shapeRadioLine.setUserData(Shape.LINE);
-        shapeRadioRectangle.setUserData(Shape.RECTANGLE);
-        shapeRadioOval.setUserData(Shape.OVAL);
-        eraserRadioButton.setUserData(Shape.ERASER);
+        shapeRadioPen.setUserData(ToolsEnum.PEN);
+        shapeRadioLine.setUserData(ToolsEnum.LINE);
+        shapeRadioRectangle.setUserData(ToolsEnum.RECTANGLE);
+        shapeRadioOval.setUserData(ToolsEnum.OVAL);
+        eraserRadioButton.setUserData(ToolsEnum.ERASER);
+        selectRadioButton.setUserData(ToolsEnum.SELECT);
 
         mediumRadioButton.setSelected(true);
         shapeRadioPen.setSelected(true);
@@ -201,8 +218,7 @@ public class MyPainterAppController {
 
     @FXML
     void clearButtonPressed(ActionEvent event) {
-        graphicsContext.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-        graphicsContextEff.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        anchorPane.getChildren().removeAll(undoHistory);
     }
 
     @FXML
@@ -211,6 +227,13 @@ public class MyPainterAppController {
         this.startY = event.getY();
         this.oldX = event.getX();
         this.oldY = event.getY();
+
+        if (selectedTool == ToolsEnum.PEN || selectedTool == ToolsEnum.ERASER) {
+            path = new MyPath();
+            path.setStrokeWidth(radius.getRadius());
+            path.setStroke(selectedTool == ToolsEnum.PEN ? brushColor : Color.WHITE);
+            path.getElements().add(new MoveTo(startX, startY));
+        }
     }
 
     @FXML
@@ -219,7 +242,7 @@ public class MyPainterAppController {
         this.lastY = event.getY();
         double wh,hg;
 
-        switch (shape) {
+        switch (selectedTool) {
             case LINE:
                 graphicsContextEff.setLineWidth(radius.getRadius());
                 graphicsContextEff.setStroke(brushColor);
@@ -227,9 +250,13 @@ public class MyPainterAppController {
                 graphicsContextEff.strokeLine(startX, startY, lastX, lastY);
                 break;
             case PEN:
-                graphicsContext.setLineWidth(radius.getRadius());
-                graphicsContext.setStroke(brushColor);
-                graphicsContext.strokeLine(oldX, oldY, lastX, lastY);
+            case ERASER:
+                graphicsContextEff.setLineWidth(radius.getRadius());
+                graphicsContextEff.setStroke(selectedTool == ToolsEnum.PEN ? brushColor : Color.WHITE);
+                graphicsContextEff.strokeLine(oldX, oldY, lastX, lastY);
+
+                path.getElements().add(new LineTo(lastX, lastY));
+
                 oldX = lastX;
                 oldY = lastY;
                 break;
@@ -263,52 +290,62 @@ public class MyPainterAppController {
                     graphicsContextEff.strokeOval(Math.min(startX, lastX), Math.min(startY, lastY), wh, hg );
                 }
                 break;
-            case ERASER:
-                graphicsContext.setFill(Color.rgb(255,255,255));
-                graphicsContext.fillOval(lastX-radius.getRadius(), lastY-radius.getRadius(),
-                        radius.getRadius()*2, radius.getRadius()*2);
-                graphicsContextEff.setFill(Color.rgb(255,255,255));
-                graphicsContextEff.fillOval(lastX-radius.getRadius(), lastY-radius.getRadius(),
-                    radius.getRadius()*2, radius.getRadius()*2);
-                break;
         }
     }
 
     @FXML
     void canvasOnMouseReleased(MouseEvent event) {
+        graphicsContextEff.clearRect(0, 0, canvasGo.getWidth(), canvasGo.getHeight());
         if (lastX != 0 && lastY != 0) {
             double wh,hg;
-            switch (shape) {
+            switch (selectedTool) {
+                case PEN:
+                case ERASER:
+                    undoHistory.push(path);
+                    anchorPane.getChildren().add(path);
+                    break;
                 case LINE:
-                    graphicsContext.setLineWidth(radius.getRadius());
-                    graphicsContext.setStroke(brushColor);
-                    graphicsContext.strokeLine(startX, startY, lastX, lastY);
+                    MyLine ln = new MyLine(startX, startY, lastX, lastY);
+                    ln.setStrokeWidth(radius.getRadius());
+                    ln.setStroke(brushColor);
+
+                    anchorPane.getChildren().add(ln);
+                    undoHistory.push(ln);
                     break;
                 case RECTANGLE:
                     wh = Math.abs(lastX - startX);
                     hg = Math.abs(lastY - startY);
-                    graphicsContext.setLineWidth(radius.getRadius());
+
+                    MyRectangle rect = new MyRectangle(Math.min(startX, lastX), Math.min(startY, lastY), wh, hg);
+                    rect.setStrokeWidth(radius.getRadius());
 
                     if(fillRadioButton.isSelected()){
-                        graphicsContext.setFill(brushColor);
-                        graphicsContext.fillRect(Math.min(startX, lastX), Math.min(startY, lastY), wh, hg);
+                        rect.setFill(brushColor);
+                        rect.setStroke(Color.TRANSPARENT);
                     }else{
-                        graphicsContext.setStroke(brushColor);
-                        graphicsContext.strokeRect(Math.min(startX, lastX), Math.min(startY, lastY), wh, hg);
+                        rect.setStroke(brushColor);
+                        rect.setFill(Color.TRANSPARENT);
                     }
+
+                    undoHistory.push(rect);
+                    anchorPane.getChildren().add(rect);
                     break;
                 case OVAL:
-                    wh = Math.abs(lastX - startX);
-                    hg = Math.abs(lastY - startY);
-                    graphicsContext.setLineWidth(radius.getRadius());
+                    wh = Math.abs(lastX - startX)/2;
+                    hg = Math.abs(lastY - startY)/2;
+
+                    MyOval oval = new MyOval((startX+lastX)/2, (startY+lastY)/2, wh, hg);
+                    oval.setStrokeWidth(radius.getRadius());
 
                     if(fillRadioButton.isSelected()){
-                        graphicsContext.setFill(brushColor);
-                        graphicsContext.fillOval(Math.min(startX, lastX), Math.min(startY, lastY), wh, hg);
+                        oval.setFill(brushColor);
+                        oval.setStroke(Color.TRANSPARENT);
                     }else{
-                        graphicsContext.setStroke(brushColor);
-                        graphicsContext.strokeOval(Math.min(startX, lastX), Math.min(startY, lastY), wh, hg);
+                        oval.setStroke(brushColor);
+                        oval.setFill(Color.TRANSPARENT);
                     }
+                    undoHistory.push(oval);
+                    anchorPane.getChildren().add(oval);
                     break;
             }
 
@@ -325,10 +362,45 @@ public class MyPainterAppController {
 
     @FXML
     void shapeRadioButtonSelected(ActionEvent event) {
-        shape = (Shape) shapeToggleGroup.getSelectedToggle().getUserData();
+        selectedTool = (ToolsEnum) shapeToggleGroup.getSelectedToggle().getUserData();
+
+        canvasGo.setMouseTransparent(selectedTool == ToolsEnum.SELECT);
+        if (selectedTool == ToolsEnum.SELECT) {
+            anchorPane.addEventHandler(MouseEvent.MOUSE_PRESSED, selectionHandler.getMousePressedEventHandler());
+            anchorPane.addEventHandler(MouseEvent.MOUSE_DRAGGED, selectionHandler.getMouseDraggedEventHandler());
+        }
+        else {
+            anchorPane.removeEventHandler(MouseEvent.MOUSE_PRESSED, selectionHandler.getMousePressedEventHandler());
+            anchorPane.removeEventHandler(MouseEvent.MOUSE_DRAGGED, selectionHandler.getMouseDraggedEventHandler());
+        }
     }
 
     @FXML
     void undoButtonPressed(ActionEvent event) {
+        if (!undoHistory.empty()){
+            anchorPane.getChildren().removeAll(undoHistory);
+            undoHistory.pop();
+
+            for(int i=0; i < undoHistory.size(); i++) {
+                Shape shape = undoHistory.elementAt(i);
+
+                if (shape.getClass() == MyLine.class) {
+                    Line temp = (Line) shape;
+                    anchorPane.getChildren().add(temp);
+                }
+                else if(shape.getClass() == MyRectangle.class) {
+                    Rectangle temp = (Rectangle) shape;
+                    anchorPane.getChildren().add(temp);
+                }
+                else if(shape.getClass() == MyOval.class) {
+                    Ellipse temp = (Ellipse) shape;
+                    anchorPane.getChildren().add(temp);
+                }
+                else if (shape.getClass() == MyPath.class) {
+                    Path path = (Path) shape;
+                    anchorPane.getChildren().add(path);
+                }
+            }
+        }
     }
 }
