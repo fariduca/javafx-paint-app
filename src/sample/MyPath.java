@@ -6,6 +6,9 @@ import javafx.scene.shape.Path;
 import sample.Interfaces.SelectableNode;
 
 public class MyPath extends Path implements SelectableNode {
+    private double _translateX;
+    private double _translateY;
+
     @Override
     public boolean requestSelection(boolean select) {
         return true;
@@ -29,7 +32,13 @@ public class MyPath extends Path implements SelectableNode {
 
     @Override
     public void notifyDragged(double x, double y, double dx, double dy) {
-        this.setTranslateX(dx - x);
-        this.setTranslateY(dy - y);
+        setTranslateX(_translateX + dx - x);
+        setTranslateY(_translateY + dy - y);
+    }
+
+    @Override
+    public void notifyReleased() {
+        _translateX = getTranslateX();
+        _translateY = getTranslateY();
     }
 }

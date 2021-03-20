@@ -9,4 +9,6 @@ public interface SelectableNode {
     public void notifySelection(boolean select);
 
     public void notifyDragged(double x, double y, double dx, double dy);
+
+    public void notifyReleased();
 }

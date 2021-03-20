@@ -6,6 +6,9 @@ import javafx.scene.shape.Rectangle;
 import sample.Interfaces.SelectableNode;
 
 public class MyRectangle extends Rectangle implements SelectableNode {
+    private double _translateX;
+    private double _translateY;
+
     public MyRectangle(double v, double v1, double v2, double v3) {
         super(v, v1, v2, v3);
     }
@@ -33,7 +36,13 @@ public class MyRectangle extends Rectangle implements SelectableNode {
 
     @Override
     public void notifyDragged(double x, double y, double dx, double dy) {
-        this.setTranslateX(dx - x);
-        this.setTranslateY(dy - y);
+        setTranslateX(_translateX + dx - x);
+        setTranslateY(_translateY + dy - y);
+    }
+
+    @Override
+    public void notifyReleased() {
+        _translateX = getTranslateX();
+        _translateY = getTranslateY();
     }
 }

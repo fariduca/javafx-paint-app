@@ -89,16 +89,6 @@
     <padding>
         <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
     </padding>
-   <center>
-      <AnchorPane fx:id="anchorPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" style="-fx-background-color: white;" BorderPane.alignment="CENTER">
-         <children>
-            <Canvas fx:id="canvasGo" height="464.0" onMouseDragged="#canvasOnMouseDragged" onMousePressed="#canvasOnMousePressed" onMouseReleased="#canvasOnMouseReleased" width="560.0" />
-         </children>
-         <BorderPane.margin>
-            <Insets left="8.0" />
-         </BorderPane.margin>
-      </AnchorPane>
-   </center>
    <top>
       <ToolBar BorderPane.alignment="CENTER">
          <items>
@@ -145,4 +135,14 @@
          </BorderPane.margin>
       </ToolBar>
    </top>
+   <center>
+      <Pane fx:id="anchorPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: white;" BorderPane.alignment="CENTER">
+         <children>
+            <Canvas fx:id="canvasGo" height="464.0" onMouseDragged="#canvasOnMouseDragged" onMousePressed="#canvasOnMousePressed" onMouseReleased="#canvasOnMouseReleased" width="560.0" />
+         </children>
+         <BorderPane.margin>
+            <Insets left="8.0" />
+         </BorderPane.margin>
+      </Pane>
+   </center>
 </BorderPane>
