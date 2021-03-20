@@ -1,11 +1,16 @@
 package sample;
 
+import javafx.geometry.Bounds;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import sample.Interfaces.SelectableNode;
 
+import java.awt.*;
+
 public class MyLine extends Line implements SelectableNode {
+    private double _translateX;
+    private double _translateY;
     public MyLine(double v, double v1, double v2, double v3) {
         super(v, v1, v2, v3);
     }
@@ -33,7 +38,13 @@ public class MyLine extends Line implements SelectableNode {
 
     @Override
     public void notifyDragged(double x, double y, double dx, double dy) {
-        this.setTranslateX(dx - x);
-        this.setTranslateY(dy - y);
+        setTranslateX(_translateX + dx - x);
+        setTranslateY(_translateY + dy - y);
+    }
+
+    @Override
+    public void notifyReleased() {
+        _translateX = getTranslateX();
+        _translateY = getTranslateY();
     }
 }

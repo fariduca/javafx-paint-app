@@ -15,42 +15,38 @@ import java.util.List;
 public class SelectionHandler {
     private Clipboard clipboard;
 
-    private EventHandler<MouseEvent> mousePressedEventHandler;
-    private EventHandler<MouseEvent> mouseDraggedEventHandler;
+    private EventHandler<MouseEvent> mouseEventHandler;
 
     private double oldX;
     private double oldY;
 
     public SelectionHandler(final Parent root) {
         this.clipboard = new Clipboard();
-        this.mousePressedEventHandler = new EventHandler<MouseEvent>() {
+        this.mouseEventHandler = new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                SelectionHandler.this.doOnMousePressed(root, event);
-                event.consume();
-            }
-        };
-        this.mouseDraggedEventHandler = new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                SelectionHandler.this.doOnMouseDragged(root, event);
+                if (event.getEventType() == MouseEvent.MOUSE_PRESSED){
+                    SelectionHandler.this.doOnMousePressed(root, event);
+                }
+                else if (event.getEventType() == MouseEvent.MOUSE_DRAGGED) {
+                    SelectionHandler.this.doOnMouseDragged(root, event);
+                }
+                else if (event.getEventType() == MouseEvent.MOUSE_RELEASED) {
+                    SelectionHandler.this.doOnMouseReleased(root, event);
+                }
                 event.consume();
             }
         };
     }
 
-    public EventHandler<MouseEvent> getMousePressedEventHandler() {
-        return mousePressedEventHandler;
-    }
-
-    public EventHandler<MouseEvent> getMouseDraggedEventHandler() {
-        return mouseDraggedEventHandler;
+    public EventHandler<MouseEvent> getMouseEventHandler() {
+        return mouseEventHandler;
     }
 
     private void doOnMousePressed(Parent root, MouseEvent event) {
         Node target = (Node) event.getTarget();
 
-        if(target.equals(root))
+        if(target.equals(root) || !target.getParent().equals(root))
             clipboard.unselectAll();
         if(root.getChildrenUnmodifiable().contains(target) && target instanceof SelectableNode) {
             SelectableNode selectableTarget = (SelectableNode) target;
@@ -59,6 +55,7 @@ public class SelectionHandler {
             clipboard.select(selectableTarget, true);
             oldX = event.getX();
             oldY = event.getY();
+            System.out.println(oldX + " : " + oldY);
         }
     }
 
@@ -69,6 +66,18 @@ public class SelectionHandler {
             SelectableNode selectableTarget = (SelectableNode) target;
             selectableTarget.notifyDragged(oldX, oldY, event.getX(), event.getY());
         }
+    }
+
+    private void doOnMouseReleased(Parent root, MouseEvent event) {
+        Node target = (Node) event.getTarget();
+        if(root.getChildrenUnmodifiable().contains(target) && target instanceof SelectableNode) {
+            SelectableNode selectableTarget = (SelectableNode) target;
+            selectableTarget.notifyReleased();
+        }
+    }
+
+    public ObservableList<SelectableNode> getSelectedItems() {
+        return clipboard.getSelectedItems();
     }
 
     /**

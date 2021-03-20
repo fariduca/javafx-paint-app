@@ -5,15 +5,20 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.*;
+import sample.Interfaces.SelectableNode;
 
 import java.util.Stack;
 
@@ -117,7 +122,7 @@ public class MyPainterAppController {
     private Canvas canvasGo;
 
     @FXML
-    private AnchorPane anchorPane;
+    private Pane anchorPane;
 
     private ToolsEnum selectedTool = ToolsEnum.PEN;
     private PenSize radius = PenSize.MEDIUM;
@@ -214,6 +219,15 @@ public class MyPainterAppController {
                 brushColorWatch.setFill(brushColor);
             }
         });
+
+        anchorPane.getParent().addEventHandler(KeyEvent.KEY_PRESSED, e -> {
+            if(e.getCode() == KeyCode.DELETE && !selectionHandler.getSelectedItems().isEmpty()) {
+                for(SelectableNode node : selectionHandler.getSelectedItems()) {
+                    anchorPane.getChildren().remove((Node) node);
+                }
+                //anchorPane.getChildren().removeAll(selectionHandler.getSelectedItems());
+            }
+        });
     }
 
     @FXML
@@ -228,8 +242,10 @@ public class MyPainterAppController {
         this.oldX = event.getX();
         this.oldY = event.getY();
 
-        if (selectedTool == ToolsEnum.PEN || selectedTool == ToolsEnum.ERASER) {
-            path = new MyPath();
+        if (selectedTool == ToolsEnum.PEN
+                || selectedTool == ToolsEnum.ERASER
+        ) {
+            path = (selectedTool == ToolsEnum.PEN) ? new MyPath() : new Path();
             path.setStrokeWidth(radius.getRadius());
             path.setStroke(selectedTool == ToolsEnum.PEN ? brushColor : Color.WHITE);
             path.getElements().add(new MoveTo(startX, startY));
@@ -249,8 +265,8 @@ public class MyPainterAppController {
                 graphicsContextEff.clearRect(0,0, canvasGo.getWidth(), canvasGo.getHeight());
                 graphicsContextEff.strokeLine(startX, startY, lastX, lastY);
                 break;
-            case PEN:
             case ERASER:
+            case PEN:
                 graphicsContextEff.setLineWidth(radius.getRadius());
                 graphicsContextEff.setStroke(selectedTool == ToolsEnum.PEN ? brushColor : Color.WHITE);
                 graphicsContextEff.strokeLine(oldX, oldY, lastX, lastY);
@@ -299,8 +315,9 @@ public class MyPainterAppController {
         if (lastX != 0 && lastY != 0) {
             double wh,hg;
             switch (selectedTool) {
-                case PEN:
                 case ERASER:
+                case PEN:
+                    path.setViewOrder(2);
                     undoHistory.push(path);
                     anchorPane.getChildren().add(path);
                     break;
@@ -308,6 +325,7 @@ public class MyPainterAppController {
                     MyLine ln = new MyLine(startX, startY, lastX, lastY);
                     ln.setStrokeWidth(radius.getRadius());
                     ln.setStroke(brushColor);
+                    ln.setViewOrder(2);
 
                     anchorPane.getChildren().add(ln);
                     undoHistory.push(ln);
@@ -318,6 +336,7 @@ public class MyPainterAppController {
 
                     MyRectangle rect = new MyRectangle(Math.min(startX, lastX), Math.min(startY, lastY), wh, hg);
                     rect.setStrokeWidth(radius.getRadius());
+                    rect.setViewOrder(2);
 
                     if(fillRadioButton.isSelected()){
                         rect.setFill(brushColor);
@@ -336,6 +355,7 @@ public class MyPainterAppController {
 
                     MyOval oval = new MyOval((startX+lastX)/2, (startY+lastY)/2, wh, hg);
                     oval.setStrokeWidth(radius.getRadius());
+                    oval.setViewOrder(2);
 
                     if(fillRadioButton.isSelected()){
                         oval.setFill(brushColor);
@@ -365,14 +385,10 @@ public class MyPainterAppController {
         selectedTool = (ToolsEnum) shapeToggleGroup.getSelectedToggle().getUserData();
 
         canvasGo.setMouseTransparent(selectedTool == ToolsEnum.SELECT);
-        if (selectedTool == ToolsEnum.SELECT) {
-            anchorPane.addEventHandler(MouseEvent.MOUSE_PRESSED, selectionHandler.getMousePressedEventHandler());
-            anchorPane.addEventHandler(MouseEvent.MOUSE_DRAGGED, selectionHandler.getMouseDraggedEventHandler());
-        }
-        else {
-            anchorPane.removeEventHandler(MouseEvent.MOUSE_PRESSED, selectionHandler.getMousePressedEventHandler());
-            anchorPane.removeEventHandler(MouseEvent.MOUSE_DRAGGED, selectionHandler.getMouseDraggedEventHandler());
-        }
+        if (selectedTool == ToolsEnum.SELECT)
+            anchorPane.addEventHandler(MouseEvent.ANY, selectionHandler.getMouseEventHandler());
+        else
+            anchorPane.removeEventHandler(MouseEvent.ANY, selectionHandler.getMouseEventHandler());
     }
 
     @FXML
@@ -396,7 +412,7 @@ public class MyPainterAppController {
                     Ellipse temp = (Ellipse) shape;
                     anchorPane.getChildren().add(temp);
                 }
-                else if (shape.getClass() == MyPath.class) {
+                else if (shape instanceof Path) {
                     Path path = (Path) shape;
                     anchorPane.getChildren().add(path);
                 }
